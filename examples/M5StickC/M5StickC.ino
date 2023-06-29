@@ -7,7 +7,7 @@
 
 BP35A1 bp35a1;
 uint8_t connectingStep = 0;
-const uint8_t MAX_CONNECTING_STEP = 11;
+const uint8_t MAX_CONNECTING_STEP = 10;
 
 bool connectWiSun(const char *id, const char *password)
 {
@@ -84,7 +84,6 @@ void setup()
 {
   M5.begin();
   M5.Lcd.setRotation(3);
-  M5.Lcd.setTextSize(2);
 
   Serial.begin(115200);
   Serial2.begin(115200, SERIAL_8N1, RXD2, TXD2);
@@ -126,7 +125,7 @@ void nextConnectStep(const String message)
 {
   M5.Lcd.fillScreen(BLACK);
 
-  drawProgressiveBar(0, 10, ++connectingStep, 7);
+  drawProgressiveBar(0, 10, ++connectingStep, MAX_CONNECTING_STEP);
 
   M5.Lcd.setTextSize(1);
   M5.Lcd.setTextColor(WHITE, BLACK);
@@ -146,14 +145,36 @@ void updateInstantaneousValue()
 {
   bp35a1.requestInstantaneousPower();
   int watt = bp35a1.getInstantaneousPower();
+  updateInstantaneousWatt(watt);
 
-  // 瞬間電力量の表示
+  bp35a1.requestInstantaneousAmperage();
+  InstantaneousAmperage amperage = bp35a1.getInstantaneousAmperage();
+  updateInstantaneousAmperage(amperage);
+}
+
+// 瞬間電力量の更新
+void updateInstantaneousWatt(int value)
+{
   M5.Lcd.fillRect(0, 0, M5.Lcd.width(), 60, BLACK);
+  M5.Lcd.setTextSize(1);
   M5.Lcd.setTextColor(BLUE);
-  M5.Lcd.setCursor(M5.Lcd.width() / 2 - 80, 10, 7);
-  M5.Lcd.printf("|%04d|", watt);
+  M5.Lcd.setCursor(M5.Lcd.width() / 2 - 70, 10, 7);
+  M5.Lcd.printf("%04d", value);
 
   M5.Lcd.setTextColor(WHITE);
-  M5.Lcd.setCursor(M5.Lcd.width() / 2 + 80, 10 + 24, 4);
+  M5.Lcd.setCursor(M5.Lcd.width() / 2 + 70, 10 + 24, 4);
   M5.Lcd.print("W");
+}
+
+// 瞬間電流値の更新
+void updateInstantaneousAmperage(InstantaneousAmperage amperage)
+{
+  const uint8_t hightOffset = 60;
+  M5.Lcd.fillRect(0, hightOffset, M5.Lcd.width(), 30, BLACK);
+  M5.Lcd.setTextSize(1);
+  M5.Lcd.setTextColor(WHITE);
+  M5.Lcd.setCursor(10, hightOffset + 3, 4);
+  int ampR = amperage.getAmperageR();
+  int ampT = amperage.getAmperageT();
+  M5.Lcd.printf("R:%4.1fA, T:%4.1fA", ampR / 10.0f, ampT / 10.0f);
 }
