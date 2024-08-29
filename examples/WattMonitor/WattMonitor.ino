@@ -15,6 +15,13 @@ bool connectWiSun(const char *id, const char *password)
   // 以前のPANAセッションを解除
   bp35a1.deleteSession();
 
+  // BP35A1のASCII変換モードがonである事を確認
+  if (!bp35a1.assureAsciiMode())
+  {
+    Serial.println("BP35A1::assure ascii mode failed");
+    return false;
+  }
+
   // B ルートの PASSWORD を送信
   if (!bp35a1.setPassword(password))
   {
