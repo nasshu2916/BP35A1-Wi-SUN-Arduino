@@ -34,6 +34,27 @@ bool BP35A1::getVersion()
   return status;
 }
 
+bool BP35A1::getAsciiMode()
+{
+  debugLog("BP35A1::send [ROPT]\r\n");
+  _serial->print("ROPT\r\n");
+
+  return waitRoptResponse();
+}
+
+bool BP35A1::assureAsciiMode()
+{
+  if (getAsciiMode())
+  {
+    return true;
+  }
+  else
+  {
+    setAsciiMode(true);
+    return waitSuccessResponse();
+  }
+}
+
 bool BP35A1::setPassword(const char *pass)
 {
   debugLog("BP35A1::send [SKSETPWD C <password>]\r\n");
@@ -352,6 +373,46 @@ bool BP35A1::waitConnection()
 
   Serial.println("BP35A1::waitConnection(): TimeOut");
   return false;
+}
+
+bool BP35A1::setAsciiMode(bool use_ascii_mode)
+{
+  // Don't use WOPT command every start up to protect the flash memory
+  if (use_ascii_mode)
+  {
+    debugLog("BP35A1::send [WOPT] 01\r\n");
+    _serial->print("WOPT 01\n\n");
+  }
+  else
+  {
+    debugLog("BP35A1::send [WOPT] 00\r\n");
+    _serial->print("WOPT 00\n\n");
+  }
+  bool status = waitSuccessResponse();
+  clearBuffer();
+  return status;
+}
+
+bool BP35A1::waitRoptResponse()
+{
+  _serial->flush();
+  while (true)
+  {
+    if (_serial->available())
+    {
+      String res = readSerialLine();
+      if (res.indexOf("OK 01") != -1)
+      {
+        return true;
+      }
+      else
+      {
+        return false;
+      }
+    }
+
+    delay(READ_INTERVAL);
+  }
 }
 
 bool BP35A1::sendUdp(std::vector<byte> data)

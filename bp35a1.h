@@ -44,6 +44,8 @@ public:
   void setEchoCallback(bool isEnable); // コマンドエコーバックを変更する
   void deleteSession();                // 以前のPANAセッションを解除する
   bool getVersion();                   // バージョン情報を取得する
+  bool getAsciiMode();                 // BP35A1のASCII出力モードを確認する
+  bool assureAsciiMode();
 
   bool setPassword(const char *pass); // B ルートの PASSWORD を設定する
   bool setId(const char *id);         // B ルートの ID を設定する
@@ -87,6 +89,9 @@ private:
   bool waitIpv6AddrResponse();
   bool requestConnection(); // PANN 接続要求を送信する
   bool waitConnection();    // PANA 接続完了を待つ
+
+  bool setAsciiMode(bool use_ascii_mode);
+  bool waitRoptResponse();  // ROPTコマンドの応答を待つ
 
   bool sendUdp(std::vector<byte> data);
   bool waitUpdResponse(const int timeout = READ_TIMEOUT);
